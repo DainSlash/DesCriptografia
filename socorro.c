@@ -149,7 +149,7 @@ int FP[] ={
 FILE *ptFILE;
 uint8_t key56[56];
 uint8_t key48[17][48];
-uint8_t Right[17][32], Left[17][32], IPtext[64], EXPtext[48], XORtext[48], XTextSBOX[8][6], XTextSBOX2[48],PBoxResult[32],CIPHER[64];
+uint8_t Right[17][32], Left[17][32], IPtext[64], EXPtext[48], XORtext[48], XTextSBOX2[32], XTextSBOX[8][6],PBoxResult[32],CIPHER[64];
 
 //Escopo de funções
 void getKeys();
@@ -270,7 +270,7 @@ void key56to48(uint8_t round, uint8_t pos, uint8_t bit){
 
 unsigned int getFileSize(){
     FILE *input = fopen("bits.txt","rb");
-    fseek(input, 0L, SEEK_END);
+    fseek(input, 0, SEEK_END);
     unsigned int size = ftell(input);
     fclose(input);
     return size;
@@ -302,27 +302,26 @@ void convertToBinary(int8_t ch){
 }
 
 void encrypt_decrypt(unsigned int size, short int mode){
-    FILE *bitsFile = fopen("bits.txt","rb");
-    uint8_t bits[size], round;
-    unsigned int blocks,i,j;
+    FILE *inputFile = (mode==0) ? fopen("bits.txt","rb") : fopen("cipher.txt","rb");//operador ternario para trocar o arquivo, dependendo do mode.
+    ptFILE = (mode==0) ? fopen("cipher.txt","ab+") : fopen("decrypted.txt","ab+");
+    unsigned int blocks,i = 0,j;
     unsigned char ch;
+    blocks =(size%64==0) ? size/64: size/64 +1;
+    int *bits = (int *)calloc(sizeof(int),(blocks*64)), round, completou;
     while(1){ //pega todos os bits de bits.txt e salva em um vetor
-        ch = getc(bitsFile);
+        ch = getc(inputFile);
         if(ch==255) break;
         bits[i++] = ch - 48;
     }
-    blocks = (size%2==0) ? size/64 : size/64 + 1; //separa o texto em blocos de 64 bits, e caso o ultimo bloco não tenha 64 bits, ele adiciona um para completar o proximo bloco.
-
     for(i=0;i<blocks;i++){//vai rodar para cada bloco de 64 bits
 
-        for(j=i*64;j<(i+1)*64;) initialPermutation(j,bits[j]);//envia bloco por bloco para permutar
+        for(j=i*64;j<(i+1)*64;j++) initialPermutation(j,bits[j]);//envia bloco por bloco para permutar
 
         for(j=0;j<32;j++) Left[0][j] = IPtext[j];
         for(j=32;j<64;j++) Right[0][j-32] = IPtext[j];
 
         for(round=1;round<17;round++){
             cipher(round,mode);
-            /*ENTENDER ISSO*/
             for(i=0;i<32;i++) Left[round][i] = Right[round-1][i];
         }
         /*
@@ -330,12 +329,14 @@ void encrypt_decrypt(unsigned int size, short int mode){
         E ESCREVER O TEXTO CRIPTOGRAFADO PARA CADA RODADA DE BLOCO DE TEXTO, DENTRO DO ARQUIVO, PREVEJO UM ERRO RESULTANTE DO NEGOCIO QUE EU FIZ PRA ADICIONAR 1 NA DIVISÁO DE 64, ARRUMAR ISSO TBM
         */
 
-    }
+        //caso seja mode 1, entao eh necessario passar os bits para char para pegar a mensagem descriptografada.
 
-    fclose(bitsFile);
+    }//o out para decrypt, é para gravar a mensagem DESCRIPTOGRAFADA em arquivo em BINARIO.
+
+    fclose(ptFILE);
+    fclose(inputFile);
 }
-/*RESOLVER ISSO*/
-//dar um jeito de enviar o ultimo bloco com alguns bits só para completar o size do arq
+
 void initialPermutation(unsigned int pos, short int text){
     int i;
     pos+=1;
@@ -359,8 +360,7 @@ void cipher(uint8_t round, uint8_t mode){
 
     for(i=0;i<32;i++){
         PBox(i, XTextSBOX2[i]);
-        /*ENTENDER O QUE FAZ VV*/
-        Right[round][i] = Left[round-1][i] ^ PBoxResult[i]; //n sei o que faz, mas tem
+        Right[round][i] = Left[round-1][i] ^ PBoxResult[i];
     }
 }
 
@@ -376,14 +376,16 @@ void SBox(int8_t XORtext[]){
 
     for(i=0;i<8;i++) for(j=0;j<6;j++) XTextSBOX[i][j] = XORtext[pos++]; //separa o texto xor do round em uma matriz 8 x 6, sendo 8 linhas de 6 colunas cada.
 
-    /*ENTENDER ISSO*/
-    for(i=0;i<8;i++) F1(i);//falta pegar o valor disso e transformar em bits de 4 n, e armazenar em XTextSBox2
+    for(i=0;i<8;i++) F1(i);//faz todo o processo da sbox, reduzindo de 48 para 32bits;
 
 }
 
 void F1(uint8_t Case){
-    int8_t linha,coluna, value;
-    //dar um jeito de descobrir a linha baseado no 10001 primeiro e 6 bit do vetor XTextBox, e a coluna baseada nos 011110 4 bits do meio do vetor;
+    int8_t linha = 0, coluna= 0, value;
+
+    linha = (XTextSBOX[Case][0] << 1) + XTextSBOX[Case][5];
+    coluna = (XTextSBOX[Case][1] << 3) + (XTextSBOX[Case][2] << 2) + (XTextSBOX[Case][3] << 1) + XTextSBOX[Case][4];
+
     switch (Case){
         case 0:
             value = S1[linha][coluna];
@@ -409,17 +411,19 @@ void F1(uint8_t Case){
         case 7:
             value = S8[linha][coluna];
             break;
-    }to4Bits(value);
+    }
+    to4Bits(value); // essa funcao passa o valor recebido, para um binario de 4 digitos, e adiciona no vetor
 }
 
 void to4Bits(uint8_t n){
-    int j, mask, bit;
+    int j, mask, bit, deslocamento = 0;
+    if (deslocamento%32==0) deslocamento =0;
     for(j=3;j>=0;j--){
         mask = 1 << j;
         bit = n  & mask;
-        if(bit==0)XTextSBOX2[3-];
-        else;
+        XTextSBOX2[3 - j + deslocamento] = (bit==0) ? 0: 1;
     }
+    deslocamento+=4;
 }
 
 
@@ -427,4 +431,5 @@ void PBox(uint8_t pos, uint8_t text){
     int i;
     pos+=1;
     for(i=0;i<32;i++) if(SP[i] == pos) break;
+    PBoxResult[i] = text;
 }
