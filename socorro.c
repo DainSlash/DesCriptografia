@@ -186,7 +186,6 @@ int main(){
     unsigned int fileSize = getFileSize();
     encrypt_decrypt(fileSize,0);
 
-
     return 0;
 }
 
@@ -329,12 +328,16 @@ void encrypt_decrypt(unsigned int size, short int mode){
         }
 
         for(j = 0; j < 64; j++){
-            if(i < 32) CIPHER[j] = Right[j];
-            else CIPHER[j] = Left[j - 32];
+            if(j < 32) CIPHER[j] = Right[round][j];
+            else CIPHER[j] = Left[round][j - 32];
             finalPermutation(j, CIPHER[j]);
-            fprintf(ptFILE, "%i",FinalPtext[j]);
+            fprintf(ptFILE, "%d",FinalPtext[j]);
             }
+
+        printf("lala");
+
         }
+
         if (mode==1){
             bitToCharWrite(FinalPtext);
         }
@@ -430,7 +433,7 @@ void F1(uint8_t Case){
 void to4Bits(uint8_t n){
     uint8_t j, mask, bit, deslocamento = 0;
     if (deslocamento%32==0) deslocamento =0;
-    for(j=3;j>=0;j--){
+    for(j=3;j<=0;j--){
         mask = 1 << j;
         bit = n  & mask;
         XTextSBOX2[3 - j + deslocamento] = (bit==0) ? 0: 1;
