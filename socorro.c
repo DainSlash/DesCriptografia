@@ -210,8 +210,6 @@ void create16Keys(uint8_t key[]){
 
     for(i=0;i<64;i++) key64to56(i,key[i]);
 
-    direita[0][27]= 120;
-
     for(i=0;i<56;i++){
         if(i<28) esquerda[0][i]=key56[i];
         else direita[0][i-28]=key56[i];
@@ -274,7 +272,7 @@ void key56to48(uint8_t round, uint8_t pos, uint8_t bit){
 
 unsigned int getFileSize(){
     FILE *input = fopen("bits.txt","rb");
-    fseek(input, 0L, SEEK_END);
+    fseek(input, 0, SEEK_END);
     unsigned int size = ftell(input);
     fclose(input);
     return size;
@@ -323,26 +321,27 @@ void encrypt_decrypt(unsigned int size, short int mode){
         for(j=i*64;j<(i+1)*64;j++) initialPermutation(j,bits[j]);//envia bloco por bloco para permutar
 
         for(j = 0; j < 64; j++){
-            if(i < 32) Left[0][j] = IPtext[j];
+            if(j < 32) Left[0][j] = IPtext[j];
             else Right[0][j-32] = IPtext[j];
         }
 
         for(round=1;round<17;round++){
-            cipher(round,mode);
-            for(i=0;i<32;i++) Left[round][i] = Right[round-1][i];
+            cipher(round,mode);/////////
+            for(j=0;j<32;j++) Left[round][i] = Right[round-1][i];
         }
 
         for(j = 0; j < 64; j++){
-            if(j < 32) CIPHER[j] = Right[round][j];
-            else CIPHER[j] = Left[round][j - 32];
+            if(j < 32) CIPHER[j] = Right[16][j];
+            else CIPHER[j] = Left[16][j - 32];
             finalPermutation(j, CIPHER[j]);
+        }
+        for(j=0;j<64;j++){
             fprintf(ptFILE, "%d",FinalPtext[j]);
-            }
-
-        printf("lala");
-
         }
 
+        printf("%d \n",i);
+
+    }printf("\n",i);
         if (mode==1){
             bitToCharWrite(FinalPtext);
         }
@@ -352,9 +351,6 @@ void encrypt_decrypt(unsigned int size, short int mode){
         E ESCREVER O TEXTO CRIPTOGRAFADO PARA CADA RODADA DE BLOCO DE TEXTO, DENTRO DO ARQUIVO, PREVEJO UM ERRO RESULTANTE DO NEGOCIO QUE EU FIZ PRA ADICIONAR 1 NA DIVISÁO DE 64, ARRUMAR ISSO TBM
         */
 
-        //caso seja mode 1, entao eh necessario passar os bits para char para pegar a mensagem descriptografada.
-
-        //o out para decrypt, é para gravar a mensagem DESCRIPTOGRAFADA em arquivo em BINARIO.
     fclose(ptFILE);
     fclose(inputFile);
 }
@@ -387,7 +383,7 @@ void cipher(uint8_t round, uint8_t mode){
 void expansionFunction(uint8_t pos, uint8_t text){
     int i;
     pos+=1;
-    for(i=0;i<32;i++) if(E[i]==pos) break;
+    for(i=0;i<48;i++) if(E[i]==pos) break;
     EXPtext[i] = text;
 }
 
@@ -402,6 +398,18 @@ void SBox(int8_t XORtext[]){
 
 void F1(uint8_t Case){
     int8_t linha = 0, coluna= 0, value;
+    //O ERRO TA AQUI, A MENSAGEM TA SENDO CRIPTOGRAFADA ERRADO, POIS OS VALORES DE LINHA E COLUNA NAO ESTAO CORRETOS.
+
+    /*VALORES ESPERADOS
+    2 12
+    0 9
+    2 7
+    1 1
+    0 13
+    0 14
+    3 7
+    3 15
+    */
 
     linha = (XTextSBOX[Case][0] << 1) + XTextSBOX[Case][5];
     coluna = (XTextSBOX[Case][1] << 3) + (XTextSBOX[Case][2] << 2) + (XTextSBOX[Case][3] << 1) + XTextSBOX[Case][4];
@@ -436,9 +444,10 @@ void F1(uint8_t Case){
 }
 
 void to4Bits(uint8_t n){
-    uint8_t j, mask, bit, deslocamento = 0;
+    uint8_t mask, bit, deslocamento = 0;
+    int8_t j;
     if (deslocamento%32==0) deslocamento =0;
-    for(j=3;j<=0;j--){
+    for(j=3;j>=0;j--){
         mask = 1 << j;
         bit = n  & mask;
         XTextSBOX2[3 - j + deslocamento] = (bit==0) ? 0: 1;
