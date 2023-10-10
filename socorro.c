@@ -148,7 +148,7 @@ int FP[] ={
 FILE *ptFILE;
 uint8_t key56[56];
 uint8_t key48[17][48];
-uint8_t Right[17][32], Left[17][32], IPtext[64], EXPtext[48], XORtext[48], XTextSBOX2[32], XTextSBOX[8][6],PBoxResult[32],CIPHER[64];
+uint8_t Right[17][32], Left[17][32], IPtext[64], EXPtext[48], XORtext[48], XTextSBOX2[32], XTextSBOX[8][6],PBoxResult[32],CIPHER[64],FinalPtext[64];
 
 //Escopo de funções
 void getKeys();
@@ -167,6 +167,8 @@ void SBox(int8_t XORtext[]);
 void F1(uint8_t Case);
 void to4Bits(uint8_t n);
 void PBox(uint8_t pos, uint8_t text);
+void finalPermutation(uint8_t pos, uint8_t text);
+void bitToCharWrite(uint8_t bits[]);
 
 int main(){
     // destroi o conteudo desses arquivos de execuções passadas
@@ -191,11 +193,11 @@ int main(){
 void getKeys(){
     FILE* keyFile = fopen("key.txt", "rb");
     uint8_t key[64], i=0;
-    int8_t ch;
+    uint8_t ch;
     while(1){
-        ch = getc(keyFile); //pega char por char no arquivo da key binaria, por ex "0", que eh = 48
-        if(ch==-1) break;
-        key[i++] = ch - 48;
+        ch = getc(keyFile);
+        if(ch==255) break;
+        key[i++] = ch - 48;//pega char por char no arquivo da key binaria, por ex "0", que eh = 48
     }
     create16Keys(key);
     fclose(keyFile);
@@ -208,12 +210,10 @@ void create16Keys(uint8_t key[]){
     for(i=0;i<64;i++) key64to56(i,key[i]);
 
     for(i=0;i<56;i++){
-        //separa os dois lados da key de 56 bits
         if(i<28) esquerda[0][i]=key56[i];
         else direita[0][i-28]=key56[i];
     }
     keysLeftShift(esquerda, direita);
-
 }
 
 void key64to56(uint8_t pos, uint8_t bit){
@@ -225,7 +225,7 @@ void key64to56(uint8_t pos, uint8_t bit){
 }
 
 void keysLeftShift(uint8_t esquerda[17][28], uint8_t direita[17][28]){
-    int round, i, j, backup[17][2], _16keys56[17][56];
+    uint8_t round, i, j, backup[17][2], _16keys56[17][56];
 
     for(round=0;round<16;round++){//bitshift resumidamente
 
@@ -250,8 +250,10 @@ void keysLeftShift(uint8_t esquerda[17][28], uint8_t direita[17][28]){
     }
 
     for(round=0;round<17;round++){ //junta todas as 16 metades em 16 keys, incluindo a primeira chave original splitada;
-        for(i=0;i<28;i++) _16keys56[round][i] = esquerda[round][i];
-        for(i=28;i<56;i++) _16keys56[round][i] = direita[round][i];
+        for(i=0;i<56;i++){
+            if(i<28) _16keys56[round][i] = esquerda[round][i];
+            else _16keys56[round][i] = direita[round][i-28];
+        }
     }
 
 
@@ -316,41 +318,41 @@ void encrypt_decrypt(unsigned int size, short int mode){
 
         for(j=i*64;j<(i+1)*64;j++) initialPermutation(j,bits[j]);//envia bloco por bloco para permutar
 
-        /// TEM COMO FAZER COM APENAS UM FOR
         for(j = 0; j < 64; j++){
             if(i < 32) Left[0][j] = IPtext[j];
             else Right[0][j-32] = IPtext[j];
         }
-
-        //for(j=0;j<32;j++) Left[0][j] = IPtext[j];
-        //for(j=32;j<64;j++) Right[0][j-32] = IPtext[j];
 
         for(round=1;round<17;round++){
             cipher(round,mode);
             for(i=0;i<32;i++) Left[round][i] = Right[round-1][i];
         }
 
-        /// JUNTANDO OS LADOS
         for(j = 0; j < 64; j++){
-            if(i < 32) CIPHER[i] = Right[i];
-            else CIPHER[i] = Left[i - 32];
+            if(i < 32) CIPHER[j] = Right[j];
+            else CIPHER[j] = Left[j - 32];
+            finalPermutation(j, CIPHER[j]);
+            fprintf(ptFILE, "%i",FinalPtext[j]);
+            }
+        }
+        if (mode==1){
+            bitToCharWrite(FinalPtext);
         }
 
         /*
-        FALTA COISA AQUI, SEPARAR CADA METADE DO TEXTO CIFRADO, REALIZAR A PERMUTACAO FINAL
+        FALTA COISA AQUI,
         E ESCREVER O TEXTO CRIPTOGRAFADO PARA CADA RODADA DE BLOCO DE TEXTO, DENTRO DO ARQUIVO, PREVEJO UM ERRO RESULTANTE DO NEGOCIO QUE EU FIZ PRA ADICIONAR 1 NA DIVISÁO DE 64, ARRUMAR ISSO TBM
         */
 
         //caso seja mode 1, entao eh necessario passar os bits para char para pegar a mensagem descriptografada.
 
-    }//o out para decrypt, é para gravar a mensagem DESCRIPTOGRAFADA em arquivo em BINARIO.
-
+        //o out para decrypt, é para gravar a mensagem DESCRIPTOGRAFADA em arquivo em BINARIO.
     fclose(ptFILE);
     fclose(inputFile);
 }
 
 void initialPermutation(unsigned int pos, short int text){
-    int i;
+    uint8_t i;
     pos+=1;
     for(i=0;i<64;i++) if (IP[i] == pos) break;
     IPtext[i] = text;
@@ -367,8 +369,6 @@ void cipher(uint8_t round, uint8_t mode){
     }
 
     SBox(XORtext);
-
-    for(i=0;i<32;i++) PBox(i,XTextSBOX2[i]);
 
     for(i=0;i<32;i++){
         PBox(i, XTextSBOX2[i]);
@@ -428,7 +428,7 @@ void F1(uint8_t Case){
 }
 
 void to4Bits(uint8_t n){
-    int j, mask, bit, deslocamento = 0;
+    uint8_t j, mask, bit, deslocamento = 0;
     if (deslocamento%32==0) deslocamento =0;
     for(j=3;j>=0;j--){
         mask = 1 << j;
@@ -438,10 +438,28 @@ void to4Bits(uint8_t n){
     deslocamento+=4;
 }
 
-
 void PBox(uint8_t pos, uint8_t text){
-    int i;
+    uint8_t i;
     pos+=1;
     for(i=0;i<32;i++) if(SP[i] == pos) break;
     PBoxResult[i] = text;
+}
+
+void finalPermutation(uint8_t pos, uint8_t text){
+    uint8_t i;
+    pos+=1;
+    for(i=0;i<64;i++) if(FP[i] == pos) break;
+    FinalPtext[i] = text;
+}
+
+void bitToCharWrite(uint8_t bits[]){
+    uint8_t i,j,ch;
+    FILE *result = fopen("result.txt","wb");
+    for(i=0;i<8;i++) {
+        for(j=7;j<=0;j++){
+            ch += bits[i] << i;
+        }
+        fprintf(result,"%c",ch);
+    }
+    fclose(result);
 }
