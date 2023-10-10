@@ -62,7 +62,6 @@ int E[] ={
     28, 29, 30, 31, 32,  1
 };
 
-
 //8 matrizes para realizar o embaralhamento e redução do texto durante a criptografia
 int S1[4][16] ={
         14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7,
@@ -317,13 +316,26 @@ void encrypt_decrypt(unsigned int size, short int mode){
 
         for(j=i*64;j<(i+1)*64;j++) initialPermutation(j,bits[j]);//envia bloco por bloco para permutar
 
-        for(j=0;j<32;j++) Left[0][j] = IPtext[j];
-        for(j=32;j<64;j++) Right[0][j-32] = IPtext[j];
+        /// TEM COMO FAZER COM APENAS UM FOR
+        for(j = 0; j < 64; j++){
+            if(i < 32) Left[0][j] = IPtext[j];
+            else Right[0][j-32] = IPtext[j];
+        }
+
+        //for(j=0;j<32;j++) Left[0][j] = IPtext[j];
+        //for(j=32;j<64;j++) Right[0][j-32] = IPtext[j];
 
         for(round=1;round<17;round++){
             cipher(round,mode);
             for(i=0;i<32;i++) Left[round][i] = Right[round-1][i];
         }
+
+        /// JUNTANDO OS LADOS
+        for(j = 0; j < 64; j++){
+            if(i < 32) CIPHER[i] = Right[i];
+            else CIPHER[i] = Left[i - 32];
+        }
+
         /*
         FALTA COISA AQUI, SEPARAR CADA METADE DO TEXTO CIFRADO, REALIZAR A PERMUTACAO FINAL
         E ESCREVER O TEXTO CRIPTOGRAFADO PARA CADA RODADA DE BLOCO DE TEXTO, DENTRO DO ARQUIVO, PREVEJO UM ERRO RESULTANTE DO NEGOCIO QUE EU FIZ PRA ADICIONAR 1 NA DIVISÁO DE 64, ARRUMAR ISSO TBM
@@ -360,7 +372,7 @@ void cipher(uint8_t round, uint8_t mode){
 
     for(i=0;i<32;i++){
         PBox(i, XTextSBOX2[i]);
-        Right[round][i] = Left[round-1][i] ^ PBoxResult[i];
+        Right[round][i] = Left[round-1][i] ^ PBoxResult[i]; // LADO DIREITO DO ROUND CIFRADO
     }
 }
 
