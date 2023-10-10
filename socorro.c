@@ -327,7 +327,7 @@ void encrypt_decrypt(unsigned int size, short int mode){
 
         for(round=1;round<17;round++){
             cipher(round,mode);/////////
-            for(j=0;j<32;j++) Left[round][i] = Right[round-1][i];
+            for(j=0;j<32;j++) Left[round][j] = Right[round-1][j];
         }
 
         for(j = 0; j < 64; j++){
