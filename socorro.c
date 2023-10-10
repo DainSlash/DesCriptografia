@@ -185,6 +185,8 @@ int main(){
     convertCharToBits();
     unsigned int fileSize = getFileSize();
     encrypt_decrypt(fileSize,0);
+    encrypt_decrypt(fileSize,1);
+
 
     return 0;
 }
@@ -207,6 +209,8 @@ void create16Keys(uint8_t key[]){
     uint8_t esquerda[17][28], direita[17][28], _16keys56[17][56];
 
     for(i=0;i<64;i++) key64to56(i,key[i]);
+
+    direita[0][27]= 120;
 
     for(i=0;i<56;i++){
         if(i<28) esquerda[0][i]=key56[i];
@@ -270,7 +274,7 @@ void key56to48(uint8_t round, uint8_t pos, uint8_t bit){
 
 unsigned int getFileSize(){
     FILE *input = fopen("bits.txt","rb");
-    fseek(input, 0, SEEK_END);
+    fseek(input, 0L, SEEK_END);
     unsigned int size = ftell(input);
     fclose(input);
     return size;
@@ -307,7 +311,8 @@ void encrypt_decrypt(unsigned int size, short int mode){
     unsigned int blocks,i = 0,j;
     unsigned char ch;
     blocks =(size%64==0) ? size/64: size/64 +1;
-    int *bits = (int *)calloc(sizeof(int),(blocks*64)), round, completou;
+    int *bits = (int *)calloc(sizeof(int),(blocks*64)), round;
+
     while(1){ //pega todos os bits de bits.txt e salva em um vetor
         ch = getc(inputFile);
         if(ch==255) break;
