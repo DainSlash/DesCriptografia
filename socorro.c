@@ -5,13 +5,13 @@
 Variaveis globais;
 
 Tabelas fixas para o algoritimo de criptografia DES
-E variaveis auxiliares para as funções
+E variaveis auxiliares para as funï¿½ï¿½es
 
-nota; toda vez que aparecer unit8_t é um inteiro não assinado de 8 bits, literalmente um char, unsigned, mas fica mais facil para ler.
+nota; toda vez que aparecer unit8_t ï¿½ um inteiro nï¿½o assinado de 8 bits, literalmente um char, unsigned, mas fica mais facil para ler.
 **/
 
 int IP[] ={
-    //Initial Permutation, permutação aplicada no texto em binario.
+    //Initial Permutation, permutaï¿½ï¿½o aplicada no texto em binario.
     58, 50, 42, 34, 26, 18, 10, 2,
     60, 52, 44, 36, 28, 20, 12, 4,
     62, 54, 46, 38, 30, 22, 14, 6,
@@ -23,7 +23,7 @@ int IP[] ={
 };
 
 int PC1[] ={
-    //Permutation choice 1, primeira permutação aplicada a key de 64 bits, e apos a permutação retorna uma key de 56 bits
+    //Permutation choice 1, primeira permutaï¿½ï¿½o aplicada a key de 64 bits, e apos a permutaï¿½ï¿½o retorna uma key de 56 bits
     57, 49, 41, 33, 25, 17,  9,
     1, 58, 50, 42, 34, 26, 18,
     10,  2, 59, 51, 43, 35, 27,
@@ -39,7 +39,7 @@ int SHIFTS[] ={
     1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 };
 
 int PC2[] ={
-    //Permutation choice 2, segunda permutação, dessa vez aplicada as chaves após o bitshift, reduzindo as 16 chaves de 56 bits, para 16 de 48
+    //Permutation choice 2, segunda permutaï¿½ï¿½o, dessa vez aplicada as chaves apï¿½s o bitshift, reduzindo as 16 chaves de 56 bits, para 16 de 48
     14, 17, 11, 24,  1,  5,
     3, 28, 15,  6, 21, 10,
     23, 19, 12,  4, 26,  8,
@@ -51,7 +51,7 @@ int PC2[] ={
 };
 
 int E[] ={
-    //Tabela para realizar mais uma permutação, porem dessa vez expandindo a entrada, aplicada aos 32 bits da direita do bloco de texto
+    //Tabela para realizar mais uma permutaï¿½ï¿½o, porem dessa vez expandindo a entrada, aplicada aos 32 bits da direita do bloco de texto
     32,  1,  2,  3,  4,  5,
     4,  5,  6,  7,  8,  9,
     8,  9, 10, 11, 12, 13,
@@ -62,12 +62,12 @@ int E[] ={
     28, 29, 30, 31, 32,  1
 };
 
-//8 matrizes para realizar o embaralhamento e redução do texto durante a criptografia
+//8 matrizes para realizar o embaralhamento e reduï¿½ï¿½o do texto durante a criptografia
 int S1[4][16] ={
-        14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7,
-        0, 15,  7,  4, 14,  2, 13,  1, 10,  6, 12, 11,  9,  5,  3,  8,
-        4,  1, 14,  8, 13,  6,  2, 11, 15, 12,  9,  7,  3, 10,  5,  0,
-        15, 12,  8,  2,  4,  9,  1,  7,  5, 11,  3, 14, 10,  0,  6, 13
+    14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7,
+    0, 15,  7,  4, 14,  2, 13,  1, 10,  6, 12, 11,  9,  5,  3,  8,
+    4,  1, 14,  8, 13,  6,  2, 11, 15, 12,  9,  7,  3, 10,  5,  0,
+    15, 12,  8,  2,  4,  9,  1,  7,  5, 11,  3, 14, 10,  0,  6, 13
 };
 
 int S2[4][16] ={
@@ -122,7 +122,7 @@ int S8[4][16]={
 
 
 int SP[] = {
-    // Realiza mais uma permutação no texto, usando o texto embaralhado e reduzido após passar pelas s-box
+    // Realiza mais uma permutaï¿½ï¿½o no texto, usando o texto embaralhado e reduzido apï¿½s passar pelas s-box
     16,  7, 20, 21,
     29, 12, 28, 17,
     1, 15, 23, 26,
@@ -134,7 +134,7 @@ int SP[] = {
     };
 
 int FP[] ={
-    // realiza a ultima permutação no texto, rearranjando ele apos a criptografia ter sido feita
+    // realiza a ultima permutaï¿½ï¿½o no texto, rearranjando ele apos a criptografia ter sido feita
     40, 8, 48, 16, 56, 24, 64, 32,
     39, 7, 47, 15, 55, 23, 63, 31,
     38, 6, 46, 14, 54, 22, 62, 30,
@@ -150,7 +150,7 @@ uint8_t key56[56];
 uint8_t key48[17][48];
 uint8_t Right[17][32], Left[17][32], IPtext[64], EXPtext[48], XORtext[48], XTextSBOX2[32], XTextSBOX[8][6],PBoxResult[32],CIPHER[64],FinalPtext[64];
 
-//Escopo de funções
+//Escopo de funcoes
 void getKeys();
 void create16Keys(uint8_t key[]);
 void key64to56(uint8_t pos, uint8_t bit);
@@ -163,7 +163,7 @@ void encrypt_decrypt(unsigned int size, short int mode);
 void initialPermutation(unsigned int pos, short int text);
 void cipher(uint8_t round, uint8_t mode);
 void expansionFunction(uint8_t pos, uint8_t text);
-void SBox(int8_t XORtext[]);
+void SBox(uint8_t XORtext[]);
 void F1(uint8_t Case);
 void to4Bits(uint8_t n);
 void PBox(uint8_t pos, uint8_t text);
@@ -171,7 +171,7 @@ void finalPermutation(uint8_t pos, uint8_t text);
 void bitToCharWrite(uint8_t bits[]);
 
 int main(){
-    // destroi o conteudo desses arquivos de execuções passadas
+    // destroi o conteudo desses arquivos de execucoes passadas
     ptFILE = fopen("result.txt", "wb+");
     fclose(ptFILE);
 
@@ -234,7 +234,7 @@ void keysLeftShift(uint8_t esquerda[17][28], uint8_t direita[17][28]){
 
         for(i=0;i<shift;i++){//salva o primeiro, ou o primeiro e o segundo bit da esquerda
             backup[round][i] = esquerda[round][i];
-        }for(i=0;i<(28 - shift);i++){//faz o deslocamento dos bits um pra trás, indicado pela tabela de bit shift
+        }for(i=0;i<(28 - shift);i++){//faz o deslocamento dos bits um pra tras, indicado pela tabela de bit shift
             esquerda[round+1][i] = esquerda[round][i + shift];
         }for(i=(28-shift), j=0;i<28;i++, j++){//insere o primeiro, ou o primeiro e o segundo bit no final, na direita
             esquerda[round+1][i] = backup[round][j];
@@ -243,7 +243,7 @@ void keysLeftShift(uint8_t esquerda[17][28], uint8_t direita[17][28]){
 
         for(i=0;i<shift;i++){//salva o primeiro, ou o primeiro e o segundo bit da esquerda
             backup[round][i] = direita[round][i];
-        }for(i=0;i<(28 - shift);i++){//faz o deslocamento dos bits um pra trás, indicado pela tabela de bit shift
+        }for(i=0;i<(28 - shift);i++){//faz o deslocamento dos bits um pra tras, indicado pela tabela de bit shift
             direita[round+1][i] = direita[round][i + shift];
         }for(i=(28-shift), j=0;i<28;i++, j++){//insere o primeiro, ou o primeiro e o segundo bit no final, na direita
             direita[round+1][i] = backup[round][j];
@@ -284,7 +284,7 @@ void convertCharToBits(){
     ptFILE = fopen("bits.txt","wb+");
     while(1){
         ch = getc(input);
-        if(ch==255) break; // se chegar no EOF, que vem como -1 em valores assinados, em não assinados vem como 255;
+        if(ch==255) break; // se chegar no EOF, que vem como -1 em valores assinados, em nao assinados vem como 255;
         convertToBinary(ch);
     }
     fclose(input);
@@ -306,7 +306,7 @@ void convertToBinary(int8_t ch){
 void encrypt_decrypt(unsigned int size, short int mode){
     FILE *inputFile = (mode==0) ? fopen("bits.txt","rb") : fopen("cipher.txt","rb");//operador ternario para trocar o arquivo, dependendo do mode.
     ptFILE = (mode==0) ? fopen("cipher.txt","ab+") : fopen("decrypted.txt","ab+");
-    unsigned int blocks,i = 0,j;
+    unsigned int blocks,i = 0,j,p;
     unsigned char ch;
     blocks =(size%64==0) ? size/64: size/64 +1;
     int *bits = (int *)calloc(sizeof(int),(blocks*64)), round;
@@ -316,9 +316,10 @@ void encrypt_decrypt(unsigned int size, short int mode){
         if(ch==255) break;
         bits[i++] = ch - 48;
     }
-    for(i=0;i<blocks;i++){//vai rodar para cada bloco de 64 bits
 
-        for(j=i*64;j<(i+1)*64;j++) initialPermutation(j,bits[j]);//envia bloco por bloco para permutar
+    for(i=0;i<blocks;i++){//vai rodar para cada bloco de 64 bits
+//o iptext, ta diferente
+        for(p=i*64;p<(i+1)*64;p++) initialPermutation(p,bits[p]);//envia bloco por bloco para permutar
 
         for(j = 0; j < 64; j++){
             if(j < 32) Left[0][j] = IPtext[j];
@@ -340,26 +341,22 @@ void encrypt_decrypt(unsigned int size, short int mode){
         }
 
         printf("%d \n",i);
-
-    }printf("\n",i);
-        if (mode==1){
-            bitToCharWrite(FinalPtext);
-        }
-
-        /*
-        FALTA COISA AQUI,
-        E ESCREVER O TEXTO CRIPTOGRAFADO PARA CADA RODADA DE BLOCO DE TEXTO, DENTRO DO ARQUIVO, PREVEJO UM ERRO RESULTANTE DO NEGOCIO QUE EU FIZ PRA ADICIONAR 1 NA DIVISÁO DE 64, ARRUMAR ISSO TBM
-        */
-
     fclose(ptFILE);
     fclose(inputFile);
+    }
+    printf("\n",i);
+    if (mode==1){
+        bitToCharWrite(FinalPtext);
+    }
+    
 }
 
-void initialPermutation(unsigned int pos, short int text){
+void initialPermutation(unsigned int pos, short int bit){
     uint8_t i;
     pos+=1;
     for(i=0;i<64;i++) if (IP[i] == pos) break;
-    IPtext[i] = text;
+    IPtext[i] = bit;
+    printf("%d",IPtext[i]);
 }
 
 void cipher(uint8_t round, uint8_t mode){
@@ -371,7 +368,7 @@ void cipher(uint8_t round, uint8_t mode){
         if(mode==0) XORtext[i] = (EXPtext[i] ^ key48[round][i]); //aqui ele faz xor com a key e com o texto expandido na ordem crescente, para criptografia
         else XORtext[i] = (EXPtext[i] ^ key48[17 - round][i]); //para descriptografar, ele faz em ordem decrescente
     }
-
+//a partir do xortext[19] fica diferente
     SBox(XORtext);
 
     for(i=0;i<32;i++){
@@ -380,14 +377,14 @@ void cipher(uint8_t round, uint8_t mode){
     }
 }
 
-void expansionFunction(uint8_t pos, uint8_t text){
+void expansionFunction(uint8_t pos, uint8_t bit){
     int i;
     pos+=1;
     for(i=0;i<48;i++) if(E[i]==pos) break;
-    EXPtext[i] = text;
+    EXPtext[i] = bit;
 }
 
-void SBox(int8_t XORtext[]){
+void SBox(uint8_t XORtext[]){
     int i,j,pos = 0;
 
     for(i=0;i<8;i++) for(j=0;j<6;j++) XTextSBOX[i][j] = XORtext[pos++]; //separa o texto xor do round em uma matriz 8 x 6, sendo 8 linhas de 6 colunas cada.
@@ -470,10 +467,11 @@ void finalPermutation(uint8_t pos, uint8_t text){
 }
 
 void bitToCharWrite(uint8_t bits[]){
-    uint8_t i,j,ch;
+    int8_t i,j,ch;
     FILE *result = fopen("result.txt","wb");
     for(i=0;i<8;i++) {
-        for(j=7;j<=0;j++){
+        ch = 0;
+        for(j=7;j>=0;j--){
             ch += bits[i] << i;
         }
         fprintf(result,"%c",ch);
