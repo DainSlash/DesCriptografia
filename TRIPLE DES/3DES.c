@@ -151,9 +151,10 @@ uint8_t key56[56];
 uint8_t key48[17][48];
 uint8_t Right[17][32], Left[17][32], EXPtext[48], XORtext[48], XTextSBOX2[32], XTextSBOX[8][6],PBoxResult[32],CIPHER[64],FinalPtext[64];
 int IPtext[64];
-uint8_t tripledes=0;
+uint8_t tripledes;
 
 //Escopo de funcoes
+void menu();
 void getKeys(int keycode);
 void create16Keys(uint8_t key[]);
 void key64to56(uint8_t pos, uint8_t bit);
@@ -183,29 +184,61 @@ int main(){
 
     ptFILE = fopen("cipher.txt", "wb+");
     fclose(ptFILE);
-
-    getKeys(1);
-    convertCharToBits();
-    unsigned int fileSize = getFileSize();
-    encrypt_decrypt(fileSize,0);
-
-    getKeys(2);
-    encrypt_decrypt(fileSize,1);
-
-    getKeys(3);
-    encrypt_decrypt(fileSize,0);
-
-    getKeys(3);
-    encrypt_decrypt(fileSize,1);
     
-    getKeys(2);
-    encrypt_decrypt(fileSize,0);
-
-    getKeys(1);
-    encrypt_decrypt(fileSize,1);
-
+    menu();
 
     return 0;
+}
+
+void menu(){
+    int o=0;
+    while(o!=3){
+        printf("\nOpcoes:\n1-)Criptografar\n2-)Descriptografar\n3-)Encerrar");
+        printf("\n\nEscolha uma opcao: ");
+        scanf("%i",&o);
+        switch (o){
+            case 1:
+                tripledes=0;
+                getKeys(1);
+                convertCharToBits();
+                unsigned int fileSize = getFileSize();
+                encrypt_decrypt(fileSize,0);
+
+                // getKeys(2);
+                // encrypt_decrypt(fileSize,1);
+
+                // getKeys(3);
+                // encrypt_decrypt(fileSize,0);
+                
+                printf("\nCriptografado com sucesso\n");
+
+                break;
+            case 2:
+                tripledes=0;
+                getKeys(1);
+                encrypt_decrypt(fileSize,1);
+                
+                // getKeys(2);
+                // encrypt_decrypt(fileSize,0);
+
+                // getKeys(1);
+                // encrypt_decrypt(fileSize,1);
+
+                printf("\nDesriptografado com sucesso\n");
+
+                break;
+            case 3:
+            
+                printf("\nPrograma encerrado.\n");
+
+                break;
+            default:
+                printf("\nOpcao invalida");
+                break;
+        }   
+    }
+
+
 }
 
 void getKeys(int keycode){
@@ -367,6 +400,7 @@ void encrypt_decrypt(unsigned int size, short int mode){
 
     fclose(ptFILE);
     fclose(inputFile);
+    free(bits);
 
    if (mode==1 && tripledes>0){
         bitToCharWrite(blocks);
@@ -481,16 +515,15 @@ void finalPermutation(uint8_t pos, uint8_t text){
 void bitToCharWrite(unsigned int blocks){
     ptFILE = fopen("decrypted.txt","rb");
     FILE *result = fopen("result.txt","wb");
-    char ch, k, l, mask;
-    int i = 0, o, *bits = (int *)calloc(sizeof(int),(blocks*64));
+    char ch, k;
+    int i = 0, j, *bits = (int *)calloc(sizeof(int),(blocks*64));
     while(1){
         ch = getc(ptFILE);
         if(ch==-1) break;
         bits[i++] = ch - 48;
     }
 
-    char * string = (int *)calloc(sizeof(char), (blocks*64)/8);
-    int j;
+    char *string = (char *)calloc(sizeof(char), (blocks*64)/8);
     for(j = 0, i = 0; i < (blocks*64); i+=8, j++){
         for(k = 0; k < 8; k++){ //Pega de oito em oito
             string[j] |= bits[i+k] << (7-k);
@@ -498,6 +531,8 @@ void bitToCharWrite(unsigned int blocks){
         fprintf(result,"%c",string[j]);
     }
 
+    free(bits);
+    free(string);
     fclose(ptFILE);
     fclose(result);
 }
