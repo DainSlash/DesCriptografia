@@ -150,7 +150,7 @@ FILE *ptFILE;
 uint8_t key56[56];
 uint8_t key48[17][48];
 uint8_t Right[17][32], Left[17][32], EXPtext[48], XORtext[48], XTextSBOX2[32], XTextSBOX[8][6],PBoxResult[32],CIPHER[64],FinalPtext[64];
-int IPtext[64];
+int IPtext[64], deslocamento;
 uint8_t tripledes;
 
 //Escopo de funcoes
@@ -196,33 +196,35 @@ void menu(){
         printf("\nOpcoes:\n1-)Criptografar\n2-)Descriptografar\n3-)Encerrar");
         printf("\n\nEscolha uma opcao: ");
         scanf("%i",&o);
+        unsigned int fileSize;
         switch (o){
             case 1:
                 tripledes=0;
                 getKeys(1);
                 convertCharToBits();
-                unsigned int fileSize = getFileSize();
+                fileSize = getFileSize();
                 encrypt_decrypt(fileSize,0);
 
-                // getKeys(2);
-                // encrypt_decrypt(fileSize,1);
+                getKeys(2);
+                encrypt_decrypt(fileSize,1);
 
-                // getKeys(3);
-                // encrypt_decrypt(fileSize,0);
+                getKeys(3);
+                encrypt_decrypt(fileSize,0);
                 
                 printf("\nCriptografado com sucesso\n");
 
                 break;
             case 2:
-                tripledes=0;
-                getKeys(1);
+                getKeys(3);
+                convertCharToBits();
+                fileSize = getFileSize();
                 encrypt_decrypt(fileSize,1);
                 
-                // getKeys(2);
-                // encrypt_decrypt(fileSize,0);
+                getKeys(2);
+                encrypt_decrypt(fileSize,0);
 
-                // getKeys(1);
-                // encrypt_decrypt(fileSize,1);
+                getKeys(1);
+                encrypt_decrypt(fileSize,1);
 
                 printf("\nDesriptografado com sucesso\n");
 
@@ -419,25 +421,29 @@ void cipher(uint8_t round, uint8_t mode){
     int i;
 
     for(i=0;i<32;i++) expansionFunction(i, Right[round - 1][i]);//envio a parte direita para a permutacao e expancao
+    
 
     for(i=0;i<48;i++){
         if(mode==0) XORtext[i] = (EXPtext[i] ^ key48[round][i]); //aqui ele faz xor com a key e com o texto expandido na ordem crescente, para criptografia
         else XORtext[i] = (EXPtext[i] ^ key48[17 - round][i]); //para descriptografar, ele faz em ordem decrescente
     }
-//a partir do xortext[19] fica diferente
+
+    deslocamento = 0;
     SBox(XORtext);
 
     for(i=0;i<32;i++){
         PBox(i, XTextSBOX2[i]);
+    }
+    for(i=0;i<32;i++){
         Right[round][i] = Left[round-1][i] ^ PBoxResult[i]; // LADO DIREITO DO ROUND CIFRADO
     }
+
 }
 
 void expansionFunction(uint8_t pos, uint8_t bit){
     int i;
     pos+=1;
-    for(i=0;i<48;i++) if(E[i]==pos) break;
-    EXPtext[i] = bit;
+    for(i=0;i<48;i++) if(E[i]==pos) EXPtext[i] = bit;
 }
 
 void SBox(uint8_t XORtext[]){
@@ -445,7 +451,9 @@ void SBox(uint8_t XORtext[]){
 
     for(i=0;i<8;i++) for(j=0;j<6;j++) XTextSBOX[i][j] = XORtext[pos++]; //separa o texto xor do round em uma matriz 8 x 6, sendo 8 linhas de 6 colunas cada.
 
+
     for(i=0;i<8;i++) F1(i);//faz todo o processo da sbox, reduzindo de 48 para 32bits;
+
 
 }
 
@@ -485,9 +493,10 @@ void F1(uint8_t Case){
 }
 
 void to4Bits(uint8_t n){
-    uint8_t mask, bit, deslocamento = 0;
+    uint8_t mask, bit;
+    // static int Case;
+    if(deslocamento%32==0) deslocamento = 0;
     int8_t j;//pega o valor vindo de F1, como resultado da passagem pela SBOX, valor esse de 0 a 15, sendo 4 bits, e reescreve esse valor em um vetor de 32 bits.
-    if (deslocamento%32==0) deslocamento =0;
     for(j=3;j>=0;j--){
         mask = 1 << j;
         bit = n  & mask;
